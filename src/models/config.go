@@ -34,6 +34,7 @@ func NewConfigENV() (*Config, error) {
 		MediaAPIConfig: MediaAPIConfig{
 			Host:            os.Getenv("MEDIA_SERVER_HOST"),
 			Port:            port,
+			Prefix:          os.Getenv("MEDIA_SERVER_PREFIX"),
 			AdminPass:       os.Getenv("MEDIA_SERVER_ADMIN_PASS"),
 			StorageRootPath: os.Getenv("MEDIA_SERVER_STORAGE_ROOT_PATH"),
 			Routes: MediaAPIRoutes{
@@ -49,6 +50,7 @@ func NewConfigENV() (*Config, error) {
 type MediaAPIConfig struct {
 	Host            string         `yaml:"host"`
 	Port            int            `yaml:"port"`
+	Prefix          string         `yaml:"prefix"`
 	AdminPass       string         `yaml:"adminPass"`
 	StorageRootPath string         `yaml:"storageRootPath"`
 	Routes          MediaAPIRoutes `yaml:"routes"`
