@@ -30,12 +30,17 @@ func NewConfigENV() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	tokenLiveTime, err := strconv.Atoi(os.Getenv("MEDIA_SERVER_TOKEN_LIVE_TIME"))
+	if err != nil {
+		return nil, err
+	}
 	return &Config{
 		MediaAPIConfig: MediaAPIConfig{
 			Host:             os.Getenv("MEDIA_SERVER_HOST"),
 			Port:             port,
 			Prefix:           os.Getenv("MEDIA_SERVER_PREFIX"),
 			AdminPass:        os.Getenv("MEDIA_SERVER_ADMIN_PASS"),
+			TokenLiveTime:    tokenLiveTime,
 			StorageRootPath:  os.Getenv("MEDIA_SERVER_STORAGE_ROOT_PATH"),
 			DataStorageRoute: os.Getenv("MEDIA_SERVER_DATA_ROUTE_STORAGE_ROUTE"),
 		},
@@ -47,6 +52,7 @@ type MediaAPIConfig struct {
 	Port             int    `yaml:"port"`
 	Prefix           string `yaml:"prefix"`
 	AdminPass        string `yaml:"adminPass"`
+	TokenLiveTime    int    `yaml:"tokenLiveTime"`
 	StorageRootPath  string `yaml:"storageRootPath"`
 	DataStorageRoute string `yaml:"storageRoute"`
 }

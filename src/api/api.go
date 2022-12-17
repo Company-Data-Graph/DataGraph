@@ -20,12 +20,13 @@ type MediaAPI struct {
 	Host             string
 	Port             int
 	Prefix           string
+	TokenLiveTime    int
 	RootPath         string
 	DataStorageRoute string
 }
 
 func NewMediaAPI(config *models.MediaAPIConfig) (*MediaAPI, error) {
-	api := &MediaAPI{Host: config.Host, Port: config.Port, Prefix: config.Prefix, RootPath: config.StorageRootPath, DataStorageRoute: config.DataStorageRoute}
+	api := &MediaAPI{Host: config.Host, Port: config.Port, Prefix: config.Prefix, TokenLiveTime: config.TokenLiveTime, RootPath: config.StorageRootPath, DataStorageRoute: config.DataStorageRoute}
 	users = make(map[string]string)
 	users["admin"] = config.AdminPass
 	return api, nil
@@ -103,7 +104,7 @@ func (api *MediaAPI) signIn(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	token, err := GenerateNewToken(creds, 2)
+	token, err := GenerateNewToken(creds, api.TokenLiveTime)
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
