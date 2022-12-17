@@ -1,0 +1,5 @@
+# Data folder not need in repo
+data/
+
+# Ignored files 
+.DS_Store
