@@ -81,6 +81,7 @@ func (api *MediaAPI) Run() {
 	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/signin"), api.signIn)
 	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/upload"), api.upload)
 	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/delete"), api.delete)
+	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/dir"), api.getFileNamesWithDates)
 	log.Printf("Run server on %s:%d", api.Host, api.Port)
 	http.ListenAndServe(fmt.Sprintf("%s:%d", api.Host, api.Port), nil)
 }
@@ -173,6 +174,27 @@ func (api *MediaAPI) delete(rw http.ResponseWriter, r *http.Request) {
 	}
 	os.Remove(fullDataStorageDestination)
 	return
+}
+
+func (api *MediaAPI) getFileNamesWithDates(rw http.ResponseWriter, r *http.Request) {
+	api.SetCorsHeaders(&rw)
+	extenstion := r.URL.Query().Get("extension")
+	extensionDirectory := api.getFullFilePath(extenstion)
+	filesDirectory, err := ioutil.ReadDir(extensionDirectory)
+	if err != nil {
+		rw.WriteHeader(http.StatusNotFound)
+		return
+	}
+	var filesList []models.File
+	for _, file := range filesDirectory {
+		filesList = append(filesList, models.File{Name: file.Name(), ModTime: file.ModTime()})
+	}
+	json, err := json.Marshal(filesList)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadGateway)
+		return
+	}
+	fmt.Fprint(rw, string(json))
 }
 
 func (api *MediaAPI) getDataByUrl(rw http.ResponseWriter, r *http.Request) {
