@@ -82,6 +82,7 @@ func (api *MediaAPI) Run() {
 	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/upload"), api.upload)
 	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/delete"), api.delete)
 	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/dir"), api.getFileNamesWithDates)
+	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/extensions"), api.getAvailableExtension)
 	log.Printf("Run server on %s:%d", api.Host, api.Port)
 	http.ListenAndServe(fmt.Sprintf("%s:%d", api.Host, api.Port), nil)
 }
@@ -190,6 +191,26 @@ func (api *MediaAPI) getFileNamesWithDates(rw http.ResponseWriter, r *http.Reque
 		filesList = append(filesList, models.File{Name: file.Name(), ModTime: file.ModTime()})
 	}
 	json, err := json.Marshal(filesList)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadGateway)
+		return
+	}
+	fmt.Fprint(rw, string(json))
+}
+
+func (api *MediaAPI) getAvailableExtension(rw http.ResponseWriter, r *http.Request) {
+	api.SetCorsHeaders(&rw)
+	path := fmt.Sprintf("%s/%s", api.RootPath, api.DataStorageRoute)
+	filesDirectory, err := ioutil.ReadDir(path)
+	if err != nil {
+		rw.WriteHeader(http.StatusNotFound)
+		return
+	}
+	var extensionsList []models.Extension
+	for _, file := range filesDirectory {
+		extensionsList = append(extensionsList, models.Extension{Name: file.Name(), IsDir: file.IsDir()})
+	}
+	json, err := json.Marshal(extensionsList)
 	if err != nil {
 		rw.WriteHeader(http.StatusBadGateway)
 		return
