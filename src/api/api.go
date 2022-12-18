@@ -81,6 +81,7 @@ func (api *MediaAPI) Run() {
 	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/data/"), api.getDataByUrl)
 	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/signin"), api.signIn)
 	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/upload"), api.upload)
+	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/uploadRaw"), api.uploadRaw)
 	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/delete"), api.delete)
 	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/dir"), api.getFileNamesWithDates)
 	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/extensions"), api.getAvailableExtension)
@@ -119,6 +120,58 @@ func (api *MediaAPI) signIn(rw http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Fprint(rw, string(json))
 	return
+}
+
+func (api *MediaAPI) uploadRaw(rw http.ResponseWriter, r *http.Request) {
+	api.SetCorsHeaders(&rw)
+	code := api.authorization(r)
+	if code != http.StatusOK {
+		rw.WriteHeader(code)
+		return
+	}
+	if r.Method != http.MethodPost {
+		rw.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	var fileModel models.FileModel
+	if err := json.NewDecoder(r.Body).Decode(&fileModel); err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	fileExtension := api.getFileExtension(fileModel.FileName)
+	fileName := api.encodeFileName(fileModel.FileName, fileExtension)
+	fullDataStorageDestination := api.getFullFilePath(fileExtension)
+
+	if _, err := os.Stat(fmt.Sprintf("%s/%s", fullDataStorageDestination, fileName)); err == nil {
+		response := models.FileAlreadyExistError{
+			What:     "File already exist!",
+			FileName: fileName,
+		}
+		json, err := json.Marshal(response)
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		rw.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(rw, string(json))
+		return
+	}
+
+	os.MkdirAll(fullDataStorageDestination, os.ModePerm)
+	file, err := os.Create(fmt.Sprintf("%s/%s", fullDataStorageDestination, fileName))
+	if err != nil {
+		log.Println(err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	_, err = file.Write([]byte(fileModel.FileBuffer))
+	if err != nil {
+		log.Println(err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+	fmt.Fprint(rw, fileName)
 }
 
 func (api *MediaAPI) upload(rw http.ResponseWriter, r *http.Request) {
