@@ -109,7 +109,16 @@ func (api *MediaAPI) signIn(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	fmt.Fprintf(rw, "token:\"%s\"", token)
+	response := models.Token{
+		Token: token,
+	}
+	json, err := json.Marshal(response)
+	if err != nil {
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprint(rw, string(json))
+	return
 }
 
 func (api *MediaAPI) upload(rw http.ResponseWriter, r *http.Request) {
@@ -131,9 +140,19 @@ func (api *MediaAPI) upload(rw http.ResponseWriter, r *http.Request) {
 	fileExtension := api.getFileExtension(handler.Filename)
 	fileName := api.encodeFileName(handler.Filename, fileExtension)
 	fullDataStorageDestination := api.getFullFilePath(fileExtension)
+
 	if _, err := os.Stat(fmt.Sprintf("%s/%s", fullDataStorageDestination, fileName)); err == nil {
+		response := models.FileAlreadyExistError{
+			What:     "File already exist!",
+			FileName: fileName,
+		}
+		json, err := json.Marshal(response)
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		rw.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(rw, "json:\"%s\"", "File already exist!")
+		fmt.Fprint(rw, string(json))
 		return
 	}
 	defer fileBytes.Close()
@@ -170,8 +189,16 @@ func (api *MediaAPI) delete(rw http.ResponseWriter, r *http.Request) {
 	fileExtension := api.getFileExtension(fileName)
 	fullDataStorageDestination := api.getFullFilePath(fileExtension)
 	if os.Remove(fmt.Sprintf("%s/%s", fullDataStorageDestination, fileName)) != nil {
+		response := models.Error{
+			What: "File not found!",
+		}
+		json, err := json.Marshal(response)
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		rw.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(rw, "json:\"%s\"", "File not found!")
+		fmt.Fprint(rw, string(json))
 		return
 	}
 	os.Remove(fullDataStorageDestination)
