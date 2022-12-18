@@ -9,6 +9,8 @@
 
 `MEDIA_SERVER_ADMIN_PASS` : set admin user password for token generation and validation
 
+`MEDIA_SERVER_TOKEN_LIVE_TIME` : set token livecycle time
+
 `MEDIA_SERVER_DATA_ROUTE_NAME` : set api handler name (example: `/data/`)
 
 `MEDIA_SERVER_DATA_ROUTE_STORAGE_ROUTE` : set folder destination (example: `/`)

@@ -20,12 +20,13 @@ type MediaAPI struct {
 	Host             string
 	Port             int
 	Prefix           string
+	TokenLiveTime    int
 	RootPath         string
 	DataStorageRoute string
 }
 
 func NewMediaAPI(config *models.MediaAPIConfig) (*MediaAPI, error) {
-	api := &MediaAPI{Host: config.Host, Port: config.Port, Prefix: config.Prefix, RootPath: config.StorageRootPath, DataStorageRoute: config.DataStorageRoute}
+	api := &MediaAPI{Host: config.Host, Port: config.Port, Prefix: config.Prefix, TokenLiveTime: config.TokenLiveTime, RootPath: config.StorageRootPath, DataStorageRoute: config.DataStorageRoute}
 	users = make(map[string]string)
 	users["admin"] = config.AdminPass
 	return api, nil
@@ -81,6 +82,8 @@ func (api *MediaAPI) Run() {
 	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/signin"), api.signIn)
 	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/upload"), api.upload)
 	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/delete"), api.delete)
+	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/dir"), api.getFileNamesWithDates)
+	http.HandleFunc(fmt.Sprintf("%s%s", api.Prefix, "/extensions"), api.getAvailableExtension)
 	log.Printf("Run server on %s:%d", api.Host, api.Port)
 	http.ListenAndServe(fmt.Sprintf("%s:%d", api.Host, api.Port), nil)
 }
@@ -101,12 +104,21 @@ func (api *MediaAPI) signIn(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	token, err := GenerateNewToken(creds, 2)
+	token, err := GenerateNewToken(creds, api.TokenLiveTime)
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	fmt.Fprintf(rw, "token:\"%s\"", token)
+	response := models.Token{
+		Token: token,
+	}
+	json, err := json.Marshal(response)
+	if err != nil {
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprint(rw, string(json))
+	return
 }
 
 func (api *MediaAPI) upload(rw http.ResponseWriter, r *http.Request) {
@@ -128,9 +140,19 @@ func (api *MediaAPI) upload(rw http.ResponseWriter, r *http.Request) {
 	fileExtension := api.getFileExtension(handler.Filename)
 	fileName := api.encodeFileName(handler.Filename, fileExtension)
 	fullDataStorageDestination := api.getFullFilePath(fileExtension)
+
 	if _, err := os.Stat(fmt.Sprintf("%s/%s", fullDataStorageDestination, fileName)); err == nil {
+		response := models.FileAlreadyExistError{
+			What:     "File already exist!",
+			FileName: fileName,
+		}
+		json, err := json.Marshal(response)
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		rw.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(rw, "json:\"%s\"", "File already exist!")
+		fmt.Fprint(rw, string(json))
 		return
 	}
 	defer fileBytes.Close()
@@ -167,12 +189,61 @@ func (api *MediaAPI) delete(rw http.ResponseWriter, r *http.Request) {
 	fileExtension := api.getFileExtension(fileName)
 	fullDataStorageDestination := api.getFullFilePath(fileExtension)
 	if os.Remove(fmt.Sprintf("%s/%s", fullDataStorageDestination, fileName)) != nil {
+		response := models.Error{
+			What: "File not found!",
+		}
+		json, err := json.Marshal(response)
+		if err != nil {
+			rw.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		rw.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(rw, "json:\"%s\"", "File not found!")
+		fmt.Fprint(rw, string(json))
 		return
 	}
 	os.Remove(fullDataStorageDestination)
 	return
+}
+
+func (api *MediaAPI) getFileNamesWithDates(rw http.ResponseWriter, r *http.Request) {
+	api.SetCorsHeaders(&rw)
+	extenstion := r.URL.Query().Get("extension")
+	extensionDirectory := api.getFullFilePath(extenstion)
+	filesDirectory, err := ioutil.ReadDir(extensionDirectory)
+	if err != nil {
+		rw.WriteHeader(http.StatusNotFound)
+		return
+	}
+	var filesList []models.File
+	for _, file := range filesDirectory {
+		filesList = append(filesList, models.File{Name: file.Name(), ModTime: file.ModTime()})
+	}
+	json, err := json.Marshal(filesList)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadGateway)
+		return
+	}
+	fmt.Fprint(rw, string(json))
+}
+
+func (api *MediaAPI) getAvailableExtension(rw http.ResponseWriter, r *http.Request) {
+	api.SetCorsHeaders(&rw)
+	path := fmt.Sprintf("%s/%s", api.RootPath, api.DataStorageRoute)
+	filesDirectory, err := ioutil.ReadDir(path)
+	if err != nil {
+		rw.WriteHeader(http.StatusNotFound)
+		return
+	}
+	var extensionsList []models.Extension
+	for _, file := range filesDirectory {
+		extensionsList = append(extensionsList, models.Extension{Name: file.Name(), IsDir: file.IsDir()})
+	}
+	json, err := json.Marshal(extensionsList)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadGateway)
+		return
+	}
+	fmt.Fprint(rw, string(json))
 }
 
 func (api *MediaAPI) getDataByUrl(rw http.ResponseWriter, r *http.Request) {

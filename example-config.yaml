@@ -3,6 +3,7 @@ mediaConfing:
   port: 8082
   prefix: "/media-server"
   adminPass: "example"
+  tokenLiveTime: 15
   storageRootPath: "./data/"
   routes:
     dataRoute: 
