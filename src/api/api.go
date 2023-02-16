@@ -71,9 +71,16 @@ func (api *MediaAPI) authorization(r *http.Request) int {
 	return http.StatusOK
 }
 
-func (api *MediaAPI) SetCorsHeaders(rw *http.ResponseWriter) {
+func (api *MediaAPI) setCorsHeaders(rw *http.ResponseWriter) {
 	(*rw).Header().Set("Access-Control-Allow-Origin", "*")
 	(*rw).Header().Set("Access-Control-Allow-Headers", "Content-Type")
+}
+
+func (api *MediaAPI) checkMethod(rw *http.ResponseWriter, getted string, required string) bool {
+	if required != getted {
+		return false
+	}
+	return true
 }
 
 func (api *MediaAPI) Run() {
@@ -89,12 +96,20 @@ func (api *MediaAPI) Run() {
 }
 
 func (api *MediaAPI) ping(rw http.ResponseWriter, r *http.Request) {
-	api.SetCorsHeaders(&rw)
+	if !api.checkMethod(&rw, r.Method, http.MethodGet) {
+		rw.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	api.setCorsHeaders(&rw)
 	fmt.Fprintln(rw, "pong")
 }
 
 func (api *MediaAPI) signIn(rw http.ResponseWriter, r *http.Request) {
-	api.SetCorsHeaders(&rw)
+	if !api.checkMethod(&rw, r.Method, http.MethodPost) {
+		rw.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	api.setCorsHeaders(&rw)
 	var creds models.Credentials
 	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
@@ -122,7 +137,11 @@ func (api *MediaAPI) signIn(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (api *MediaAPI) upload(rw http.ResponseWriter, r *http.Request) {
-	api.SetCorsHeaders(&rw)
+	if !api.checkMethod(&rw, r.Method, http.MethodPost) {
+		rw.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	api.setCorsHeaders(&rw)
 	code := api.authorization(r)
 	if code != http.StatusOK {
 		rw.WriteHeader(code)
@@ -175,7 +194,11 @@ func (api *MediaAPI) upload(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (api *MediaAPI) delete(rw http.ResponseWriter, r *http.Request) {
-	api.SetCorsHeaders(&rw)
+	if !api.checkMethod(&rw, r.Method, http.MethodGet) {
+		rw.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	api.setCorsHeaders(&rw)
 	code := api.authorization(r)
 	if code != http.StatusOK {
 		rw.WriteHeader(code)
@@ -206,7 +229,11 @@ func (api *MediaAPI) delete(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (api *MediaAPI) getFileNamesWithDates(rw http.ResponseWriter, r *http.Request) {
-	api.SetCorsHeaders(&rw)
+	if !api.checkMethod(&rw, r.Method, http.MethodGet) {
+		rw.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	api.setCorsHeaders(&rw)
 	extenstion := r.URL.Query().Get("extension")
 	extensionDirectory := api.getFullFilePath(extenstion)
 	filesDirectory, err := ioutil.ReadDir(extensionDirectory)
@@ -227,7 +254,11 @@ func (api *MediaAPI) getFileNamesWithDates(rw http.ResponseWriter, r *http.Reque
 }
 
 func (api *MediaAPI) getAvailableExtension(rw http.ResponseWriter, r *http.Request) {
-	api.SetCorsHeaders(&rw)
+	if !api.checkMethod(&rw, r.Method, http.MethodGet) {
+		rw.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	api.setCorsHeaders(&rw)
 	path := fmt.Sprintf("%s/%s", api.RootPath, api.DataStorageRoute)
 	filesDirectory, err := ioutil.ReadDir(path)
 	if err != nil {
@@ -247,7 +278,11 @@ func (api *MediaAPI) getAvailableExtension(rw http.ResponseWriter, r *http.Reque
 }
 
 func (api *MediaAPI) getDataByUrl(rw http.ResponseWriter, r *http.Request) {
-	api.SetCorsHeaders(&rw)
+	if !api.checkMethod(&rw, r.Method, http.MethodGet) {
+		rw.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	api.setCorsHeaders(&rw)
 	fileName := r.URL.RequestURI()[len(fmt.Sprintf("%s%s", api.Prefix, "/data/")):]
 	fileExtension := api.getFileExtension(fileName)
 	fullDataStorageDestination := api.getFullFilePath(fileExtension)
