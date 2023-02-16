@@ -77,7 +77,7 @@ func (api *MediaAPI) setCorsHeaders(rw *http.ResponseWriter) {
 	(*rw).Header().Set("Access-Control-Allow-Headers", "Content-Type")
 }
 
-func (api *MediaAPI) checkMethod(rw *http.ResponseWriter, getted string, required string) bool {
+func (api *MediaAPI) checkMethod(getted string, required string) bool {
 	if required != getted {
 		return false
 	}
@@ -97,7 +97,7 @@ func (api *MediaAPI) Run() {
 }
 
 func (api *MediaAPI) ping(rw http.ResponseWriter, r *http.Request) {
-	if !api.checkMethod(&rw, r.Method, http.MethodGet) {
+	if !api.checkMethod(r.Method, http.MethodGet) {
 		rw.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -106,7 +106,7 @@ func (api *MediaAPI) ping(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (api *MediaAPI) signIn(rw http.ResponseWriter, r *http.Request) {
-	if !api.checkMethod(&rw, r.Method, http.MethodPost) {
+	if !api.checkMethod(r.Method, http.MethodPost) {
 		rw.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -138,7 +138,7 @@ func (api *MediaAPI) signIn(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (api *MediaAPI) upload(rw http.ResponseWriter, r *http.Request) {
-	if !api.checkMethod(&rw, r.Method, http.MethodPost) {
+	if !api.checkMethod(r.Method, http.MethodPost) {
 		rw.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -195,7 +195,7 @@ func (api *MediaAPI) upload(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (api *MediaAPI) delete(rw http.ResponseWriter, r *http.Request) {
-	if !api.checkMethod(&rw, r.Method, http.MethodGet) {
+	if !api.checkMethod(r.Method, http.MethodGet) {
 		rw.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -230,7 +230,7 @@ func (api *MediaAPI) delete(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (api *MediaAPI) getFileNamesWithDates(rw http.ResponseWriter, r *http.Request) {
-	if !api.checkMethod(&rw, r.Method, http.MethodGet) {
+	if !api.checkMethod(r.Method, http.MethodGet) {
 		rw.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -255,7 +255,7 @@ func (api *MediaAPI) getFileNamesWithDates(rw http.ResponseWriter, r *http.Reque
 }
 
 func (api *MediaAPI) getAvailableExtension(rw http.ResponseWriter, r *http.Request) {
-	if !api.checkMethod(&rw, r.Method, http.MethodGet) {
+	if !api.checkMethod(r.Method, http.MethodGet) {
 		rw.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -279,7 +279,7 @@ func (api *MediaAPI) getAvailableExtension(rw http.ResponseWriter, r *http.Reque
 }
 
 func (api *MediaAPI) getDataByUrl(rw http.ResponseWriter, r *http.Request) {
-	if !api.checkMethod(&rw, r.Method, http.MethodGet) {
+	if !api.checkMethod(r.Method, http.MethodGet) {
 		rw.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
