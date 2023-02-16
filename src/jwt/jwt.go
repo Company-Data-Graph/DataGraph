@@ -1,4 +1,4 @@
-package api
+package jwt
 
 import (
 	"encoding/base64"
@@ -11,15 +11,15 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-var users map[string]string
+var Users map[string]string
 
-var jwtKey []byte
+var Key []byte
 
 func GenerateNewToken(creds models.Credentials, t int) (string, error) {
-	if len(jwtKey) == 0 {
-		log.Println("JwtKey not found! Generate new key!")
-		jwtKey = []byte(base64.RawStdEncoding.EncodeToString([]byte(fmt.Sprintf("%d", rand.Intn(1000000)))))
-		log.Println("New key:", string(jwtKey))
+	if len(Key) == 0 {
+		log.Println("Key not found! Generate new key!")
+		Key = []byte(base64.RawStdEncoding.EncodeToString([]byte(fmt.Sprintf("%d", rand.Intn(1000000)))))
+		log.Println("New key:", string(Key))
 	}
 	expirationTime := time.Now().Add(time.Minute * time.Duration(t))
 	claims := &models.Claims{
@@ -29,7 +29,7 @@ func GenerateNewToken(creds models.Credentials, t int) (string, error) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtKey)
+	tokenString, err := token.SignedString(Key)
 	return tokenString, err
 }
 
@@ -38,7 +38,7 @@ func CheckToken() {
 }
 
 func CredentialsValidation(creds models.Credentials) bool {
-	expectedCreds, ok := users[creds.Username]
+	expectedCreds, ok := Users[creds.Username]
 	if !ok || creds.Password != expectedCreds {
 		return false
 	}

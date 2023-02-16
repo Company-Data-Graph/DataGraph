@@ -7,13 +7,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"media-server/src/jwt"
 	"media-server/src/models"
 	"net/http"
 	"os"
 	"regexp"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
+	jwtGo "github.com/dgrijalva/jwt-go"
 )
 
 type MediaAPI struct {
@@ -27,8 +28,8 @@ type MediaAPI struct {
 
 func NewMediaAPI(config *models.MediaAPIConfig) (*MediaAPI, error) {
 	api := &MediaAPI{Host: config.Host, Port: config.Port, Prefix: config.Prefix, TokenLiveTime: config.TokenLiveTime, RootPath: config.StorageRootPath, DataStorageRoute: config.DataStorageRoute}
-	users = make(map[string]string)
-	users["admin"] = config.AdminPass
+	jwt.Users = make(map[string]string)
+	jwt.Users["admin"] = config.AdminPass
 	return api, nil
 }
 
@@ -58,9 +59,9 @@ func (api *MediaAPI) authorization(r *http.Request) int {
 		return http.StatusUnauthorized
 	}
 	var claims models.Claims
-	tokenValidation, err := jwt.ParseWithClaims(token, &claims, func(t *jwt.Token) (interface{}, error) { return jwtKey, nil })
+	tokenValidation, err := jwtGo.ParseWithClaims(token, &claims, func(t *jwtGo.Token) (interface{}, error) { return jwt.Key, nil })
 	if err != nil {
-		if err == jwt.ErrSignatureInvalid {
+		if err == jwtGo.ErrSignatureInvalid {
 			return http.StatusUnauthorized
 		}
 		return http.StatusBadRequest
@@ -115,11 +116,11 @@ func (api *MediaAPI) signIn(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	if !CredentialsValidation(creds) {
+	if !jwt.CredentialsValidation(creds) {
 		rw.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	token, err := GenerateNewToken(creds, api.TokenLiveTime)
+	token, err := jwt.GenerateNewToken(creds, api.TokenLiveTime)
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
