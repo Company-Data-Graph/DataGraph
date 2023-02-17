@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"media-server/internal/api"
-	"media-server/internal/domain"
+	"media-server/internal/models"
 )
 
 type MODE string
@@ -20,7 +20,7 @@ func main() {
 	configFlag := flag.String("config", "config.yaml", "Config destination (.yml)")
 	flag.Parse()
 	var (
-		config *domain.Config
+		config *models.Config
 		err    error
 	)
 	switch *modeFlag {
@@ -29,12 +29,12 @@ func main() {
 		if configFlag == nil {
 			log.Panic("Config folder is not setted in arguments!")
 		}
-		if config, err = domain.NewConfigYML(*configFlag); err != nil {
+		if config, err = models.NewConfigYML(*configFlag); err != nil {
 			log.Panic(fmt.Sprintf("Error while configs reading!\nError: %s", err.Error()))
 		}
 	case string(MODE_ENV):
 		log.Println("Loading configuration from ENV")
-		if config, err = domain.NewConfigENV(); err != nil {
+		if config, err = models.NewConfigENV(); err != nil {
 			log.Panic(fmt.Sprintf("Error while configs readings from envs!\nError: %s", err.Error()))
 		}
 	}

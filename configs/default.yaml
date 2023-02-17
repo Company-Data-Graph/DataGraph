@@ -5,7 +5,4 @@ mediaConfing:
   adminPass: "example"
   tokenLiveTime: 15
   storageRootPath: "./data/"
-  routes:
-    dataRoute: 
-      name: "/data/"
-      storageRoute: "/"
+  storageRoute: "/"
