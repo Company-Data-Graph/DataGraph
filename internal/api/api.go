@@ -23,11 +23,11 @@ type MediaAPI struct {
 }
 
 // Create new MediaAPI
-func NewMediaAPI(config *models.MediaAPIConfig) (*MediaAPI, error) {
+func NewMediaAPI(config *models.MediaAPIConfig) *MediaAPI {
 	api := &MediaAPI{Host: config.Host, Port: config.Port, Prefix: config.Prefix, TokenLiveTime: config.TokenLiveTime, RootPath: config.StorageRootPath, DataStorageRoute: config.DataStorageRoute}
 	jwt.Users = make(map[string]string)
 	jwt.Users["admin"] = config.AdminPass
-	return api, nil
+	return api
 }
 
 // Run media-server api

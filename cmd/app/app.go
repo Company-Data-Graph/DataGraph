@@ -38,6 +38,6 @@ func main() {
 			log.Panic(fmt.Sprintf("Error while configs readings from envs!\nError: %s", err.Error()))
 		}
 	}
-	api, _ := api.NewMediaAPI(&config.MediaAPIConfig)
+	api := api.NewMediaAPI(&config.MediaAPIConfig)
 	api.Run()
 }
