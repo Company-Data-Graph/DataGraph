@@ -12,10 +12,11 @@ func CreateDir(root string) {
 
 // Check that file current file in current dir exist
 func CheckFileExist(filePath string, fileName string) bool {
-	if _, err := os.Stat(path.Join(filePath, fileName)); err == nil {
-		return true
+	_, err := os.Stat(path.Join(filePath, fileName))
+	if os.IsNotExist(err) {
+		return false
 	}
-	return false
+	return true
 }
 
 func CreateFile(fileName string, filePath string, data []byte) error {
