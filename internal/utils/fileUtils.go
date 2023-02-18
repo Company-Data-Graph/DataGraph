@@ -9,9 +9,9 @@ import (
 )
 
 func GetFileExtension(fileName string) string {
-	fileExtension := "_"
-	fileNameSplitted := (strings.Split(fileName, "."))
-	if len(fileNameSplitted) > 0 {
+	fileExtension := ""
+	fileNameSplitted := strings.Split(fileName, ".")
+	if len(fileNameSplitted) > 1 {
 		fileExtension = fileNameSplitted[len(fileNameSplitted)-1]
 	}
 	return fileExtension
