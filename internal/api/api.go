@@ -77,7 +77,7 @@ func (api *MediaAPI) signIn(rw http.ResponseWriter, r *http.Request) {
 	// Generate token if credentials is equal
 	token, err := jwt.GenerateNewToken(creds, api.TokenLiveTime)
 	if err != nil {
-		rw.WriteHeader(http.StatusBadRequest)
+		rw.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
