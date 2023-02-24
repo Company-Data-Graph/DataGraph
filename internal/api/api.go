@@ -9,6 +9,7 @@ import (
 	"media-server/internal/models"
 	filesystem "media-server/internal/osProvider"
 	"media-server/internal/utils"
+	"path"
 
 	"net/http"
 )
@@ -109,11 +110,11 @@ func (api *MediaAPI) upload(rw http.ResponseWriter, r *http.Request) {
 
 	// Get fileBytes from form and defer buffer closing
 	fileBytes, handler, err := r.FormFile("file")
-	defer fileBytes.Close()
 	if err != nil {
 		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	defer fileBytes.Close()
 
 	// Calculate file meta data
 	fileExtension := utils.GetFileExtension(handler.Filename)
@@ -126,11 +127,7 @@ func (api *MediaAPI) upload(rw http.ResponseWriter, r *http.Request) {
 			What:     "File already exist!",
 			FileName: fileName,
 		}
-		json, err := json.Marshal(response)
-		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		json, _ := json.Marshal(response)
 		rw.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(rw, string(json))
 		return
@@ -174,11 +171,7 @@ func (api *MediaAPI) delete(rw http.ResponseWriter, r *http.Request) {
 			What:     "File not exist!",
 			FileName: fileName,
 		}
-		json, err := json.Marshal(response)
-		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		json, _ := json.Marshal(response)
 		rw.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(rw, string(json))
 		return
@@ -207,11 +200,7 @@ func (api *MediaAPI) getFileNamesWithDates(rw http.ResponseWriter, r *http.Reque
 	for _, file := range filesDirectory {
 		filesList = append(filesList, models.File{Name: file.Name(), ModTime: file.ModTime()})
 	}
-	json, err := json.Marshal(filesList)
-	if err != nil {
-		rw.WriteHeader(http.StatusBadGateway)
-		return
-	}
+	json, _ := json.Marshal(filesList)
 	fmt.Fprint(rw, string(json))
 }
 
@@ -231,11 +220,7 @@ func (api *MediaAPI) getAvailableExtension(rw http.ResponseWriter, r *http.Reque
 	for _, file := range filesDirectory {
 		extensionsList = append(extensionsList, models.Extension{Name: file.Name(), IsDir: file.IsDir()})
 	}
-	json, err := json.Marshal(extensionsList)
-	if err != nil {
-		rw.WriteHeader(http.StatusBadGateway)
-		return
-	}
+	json, _ := json.Marshal(extensionsList)
 	fmt.Fprint(rw, string(json))
 }
 
@@ -245,7 +230,7 @@ func (api *MediaAPI) getDataByUrl(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	utils.SetCorsHeaders(&rw)
-	fileName := r.URL.RequestURI()[len(fmt.Sprintf("%s%s", api.Prefix, "/data/")):]
+	fileName := path.Base(r.URL.RequestURI())
 	fileExtension := utils.GetFileExtension(fileName)
 	fullDataStorageDestination := utils.GetFullFilePath(api.RootPath, api.DataStorageRoute, fileExtension)
 	http.ServeFile(rw, r, fmt.Sprintf("%s/%s", fullDataStorageDestination, fileName))

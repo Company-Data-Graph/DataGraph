@@ -4,7 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"regexp"
+	"path"
 	"strings"
 )
 
@@ -23,7 +23,8 @@ func EncodeFileName(fileName string, fileExtension string) string {
 }
 
 func GetFullFilePath(rootPath string, dataStoragePath string, fileExtension string) string {
-	path := fmt.Sprintf("%s/%s/%s", rootPath, dataStoragePath, fileExtension)
-	reg := regexp.MustCompile("(/)*")
-	return reg.ReplaceAllString(path, "$1")
+	//path := fmt.Sprintf("%s/%s/%s", rootPath, dataStoragePath, fileExtension)
+	//reg := regexp.MustCompile("(/)*")
+	//return reg.ReplaceAllString(path, "$1")
+	return path.Join(rootPath, dataStoragePath, fileExtension)
 }
