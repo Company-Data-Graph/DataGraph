@@ -1,0 +1,4 @@
+mediaConfing:
+  host: "another-test"
+  port: 3000
+  tokenLiveTime: -3

@@ -1,0 +1,8 @@
+mediaConfing:
+  host: "test"
+  port: 5000
+  prefix: "test-prefix"
+  adminPass: "test-pass"
+  tokenLiveTime: 1
+  storageRootPath: "test-root"
+  storageRoute: "test-storage"
