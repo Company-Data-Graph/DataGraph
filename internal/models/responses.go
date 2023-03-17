@@ -24,3 +24,7 @@ type FileAlreadyExistError struct {
 type Token struct {
 	Token string `json:"token"`
 }
+
+type FileName struct {
+	FileName string `json: "fileName"`
+}
